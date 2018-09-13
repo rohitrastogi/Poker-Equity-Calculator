@@ -110,7 +110,7 @@ def run_simulation(hole_cards, board):
         hand_freqs.append([0]* len(constants.HANDS))
         wins.append(0)
     for board in sample_decks(10000, deck, len(board)):
-        update_simulation_data(hole_cards, board, hand_freqs, wins)
+        update_simulation_data(hand, board, hand_freqs, wins)
     print(hand_freqs)
     print(wins)
     
