@@ -3,6 +3,7 @@ HANDS = (
     'Straight Flush',
     'Four of a Kind',
     'Full House',
+    'Flush',
     'Straight',
     'Three of a Kind',
     'Two Pair',
@@ -12,7 +13,7 @@ HANDS = (
 
 SUITS = ('S', 'H', 'D', 'C')
 
-RANKS = {
+RANK_TO_INT = {
     'A': 13,
     'K': 12, 
     'Q': 11, 
@@ -28,7 +29,7 @@ RANKS = {
     '2': 1
 }
 
-REVERSE_RANKS = {v: k for k, v in RANKS.items()}
+INT_TO_RANK = {v: k for k, v in RANK_TO_INT.items()}
 
 MAX_BOARD_SIZE = 5
 
