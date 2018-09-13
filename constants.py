@@ -28,6 +28,10 @@ RANKS = {
     '2': 1
 }
 
+REVERSE_RANKS = {v: k for k, v in RANKS.items()}
+
 MAX_BOARD_SIZE = 5
 
 MAX_HOLE_SIZE = 2
+
+SIZE_OF_HAND = 5
