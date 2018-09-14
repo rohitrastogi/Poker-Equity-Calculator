@@ -1,14 +1,14 @@
 HANDS = (
-    'Royal Flush',
-    'Straight Flush',
-    'Four of a Kind',
-    'Full House',
-    'Flush',
-    'Straight',
-    'Three of a Kind',
+    'High Card',
+    'Pair',
     'Two Pair',
-    'Pair', 
-    'High Card'
+    'Three of a Kind',
+    'Straight',
+    'Flush', 
+    'Full House',
+    'Four of a Kind', 
+    'Straight Flush',
+    'Royal Flush'
 )
 
 SUITS = ('S', 'H', 'D', 'C')
@@ -18,7 +18,7 @@ RANK_TO_INT = {
     'K': 12, 
     'Q': 11, 
     'J': 10,
-    '10': 9,
+    'T': 9,
     '9': 8, 
     '8': 7,
     '7': 6,
