@@ -25,8 +25,6 @@ def reduce_process_results(queue):
         return hand_hists_sum, win_hist_sum
     return reduce(helper, queue_list)
 
-    
-
 def run_simulation_parallel(hole_cards, board):
     deck = utils.generate_deck(hole_cards, board)
     #TODO: experiment with input_queue size relative to the number of processes

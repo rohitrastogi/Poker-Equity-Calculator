@@ -16,7 +16,7 @@ def sample_boards(num_samples, deck, board_size):
     for _ in range(num_samples):
         yield random.sample(deck, constants.MAX_BOARD_SIZE - board_size) 
 
-def populate_freqs(hole_cards, board):
+def populate_hists(hole_cards, board):
     rank_hist = {}
     suit_hist = {}
     for (rank, suit) in hole_cards + list(board):
@@ -32,7 +32,7 @@ def populate_freqs(hole_cards, board):
     return rank_hist, suit_hist
 
 def evaluate_hand(hand, board):
-    rank_hist, suit_hist = populate_freqs(hand, board)
+    rank_hist, suit_hist = populate_hists(hand, board)
     #Sort in decreasing order by rank frequency. Break ties using decreasing rank.
     #Example shape: [(13, 2), (12, 2), (4, 2), (10, 1)]
     sorted_rank_hist = sorted(rank_hist.items(), key = lambda kv: ((-kv[1]), -kv[0]))
