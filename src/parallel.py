@@ -16,7 +16,9 @@ def process(input_queue, output_queue, hole_cards):
 
 def reduce_process_results(queue):
     from functools import reduce
-    queue_list = list(queue)
+    queue_list = []
+    for i in iter(queue.get, None):
+        queue_list.append(i)
     def helper(x, y):
         hand_hists1, win_hist1 = x[0], x[1]
         hand_hists2, win_hist2 = y[0], y[1]
@@ -38,6 +40,7 @@ def run_simulation_parallel(hole_cards, board):
         input_queue.put(None)
     pool.close()
     pool.join()
+    output_queue.put(None) #add sentinel
     hand_hists, win_hist = reduce_process_results(output_queue)
     win_perc, hand_perc = utils.calculate_equity(hand_hists, win_hist)
     print(win_perc)
