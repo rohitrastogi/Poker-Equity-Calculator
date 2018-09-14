@@ -4,7 +4,7 @@ import random
 
 
 def generate_deck(hole_cards, board):
-    flat_hole_cards = set([card for card in hand for hand in hole_cards] + board)
+    flat_hole_cards = set([card for hand in hole_cards for card in hand] + board)
     return [(card, suit) for suit in constants.SUITS for card in constants.INT_TO_RANK.keys() if (card, suit) not in flat_hole_cards]
 
 #exhaustively enumerate all possible boards
@@ -13,13 +13,13 @@ def enumerate_boards(deck, board_size):
 
 #generate num_samples random boards (for Monte Carlo Simulation)
 def sample_boards(num_samples, deck, board_size):
-    for _ in num_samples:
+    for _ in range(num_samples):
         yield random.sample(deck, constants.MAX_BOARD_SIZE - board_size) 
 
 def populate_freqs(hole_cards, board):
     rank_freq = {}
     suit_freq = {}
-    for (rank, suit) in hole_cards + board:
+    for (rank, suit) in hole_cards + list(board):
         if rank in rank_freq:
             rank_freq[rank] += 1
         else:
@@ -65,7 +65,7 @@ def evaluate_hand_helper(hand, board, rank_freq, suit_freq, rank):
     if straight_kicker:
         #royal flush
         if straight_kicker == constants.RANK_TO_INT['A'] and flush_cards:
-            return 0
+            return 0, None
         #straight flush
         elif flush_cards:
             return 1, straight_kicker
@@ -78,7 +78,7 @@ def evaluate_hand_helper(hand, board, rank_freq, suit_freq, rank):
     #single pair
     if rank_freq[rank] == 2:
         return 8, rank, get_kicker([rank], rank_freq, 3)
-    high_card = max(hand + board, key = lambda x: x[0])
+    high_card = max(hand + list(board), key = lambda x: x[0])
     #high card
     return 9, high_card[0], get_kicker(high_card, rank_freq, 4)
 
@@ -106,7 +106,7 @@ def detect_flush(suit_freqs):
             return sorted(suit_freqs[suit], reverse = True)[:constants.SIZE_OF_HAND]
     return False
 
-def update_simulation_data(hole_cards, board, hand_freqs, wins):
+def update_simulation_state(hole_cards, board, hand_freqs, wins):
     evaluated_hands = []
     for i, hand in enumerate(hole_cards):
         evaluated_hand = evaluate_hand(hand, board)
@@ -115,6 +115,15 @@ def update_simulation_data(hole_cards, board, hand_freqs, wins):
     random.shuffle(evaluated_hands) #shuffle to randomly distribute ties
     winner_index = evaluated_hands.index(max(evaluated_hands))
     wins[winner_index] += 1
+
+def calculate_equity(hand_freqs, wins):
+    total_its = sum(wins)
+    wins = [val/total_its for val in wins]
+    for i, player_stats in enumerate(hand_freqs):
+        for j, stat in enumerate(player_stats):
+            hand_freqs[i][j] = stat/total_its
+    print(wins)
+    print(hand_freqs)
         
 def run_simulation(hole_cards, board):
     deck = generate_deck(hole_cards, board)
@@ -123,17 +132,9 @@ def run_simulation(hole_cards, board):
     for hand in hole_cards:
         hand_freqs.append([0]* len(constants.HANDS))
         wins.append(0)
-    for board in sample_boards(10000, deck, len(board)):
-        update_simulation_data(hand, board, hand_freqs, wins)
-    print(hand_freqs)
-    print(wins)
+    for i, board in enumerate(sample_boards(10000, deck, len(board))):
+        update_simulation_state(hole_cards, board, hand_freqs, wins)
+    calculate_equity(hand_freqs, wins)
     
+run_simulation([[(13, 'D'), (12, 'D')],[(10, 'D'), (9, 'D')]], [])
 
-
-
-
-
-
-
-
-        

@@ -122,5 +122,5 @@ def test_evaluate_hand_straight_flush():
 def test_evaluate_hand_royal_flush():
     hand = [(13, 'S'), (12, 'S')]
     board = [(11, 'S'), (10, 'S'), (9, 'S'), (8, 'S'), (7, 'H')]
-    assert(utils.evaluate_hand(hand, board) == 0)
+    assert(utils.evaluate_hand(hand, board) == (0, None))
     

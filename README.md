@@ -1,6 +1,6 @@
 todos:
-1) write tests and fix unevitabe bugs
-2) add report pretty print
+1) add tie support
+2) add report pretty print and timing
 3) command line parsing
 4) experiment with enumeration vs monte-carlo
 5) potentially experiment multiprocessing?
