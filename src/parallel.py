@@ -17,8 +17,10 @@ def process(input_queue, output_queue, hole_cards):
 def reduce_process_results(queue):
     from functools import reduce
     queue_list = []
-    for i in iter(queue.get, None):
-        queue_list.append(i)
+    while True:
+        if queue.empty():
+            break
+        queue_list.append(queue.get())
     def helper(x, y):
         hand_hists1, win_hist1 = x[0], x[1]
         hand_hists2, win_hist2 = y[0], y[1]
@@ -28,10 +30,11 @@ def reduce_process_results(queue):
     return reduce(helper, queue_list)
 
 def run_simulation_parallel(hole_cards, board):
+    start_time = utils.timeit.default_timer()
     deck = utils.generate_deck(hole_cards, board)
     #TODO: experiment with input_queue size relative to the number of processes
     #discover ratio of producer(generator)/consumer(equity calculation)
-    input_queue = mp.Queue(maxsize = 4)
+    input_queue = mp.Queue(maxsize = 100)
     output_queue = mp.Queue(maxsize = 4)
     pool = mp.Pool(4, initializer = process, initargs = (input_queue, output_queue, hole_cards))
     for board in utils.enumerate_boards(deck, len(board)):
@@ -40,9 +43,13 @@ def run_simulation_parallel(hole_cards, board):
         input_queue.put(None)
     pool.close()
     pool.join()
-    output_queue.put(None) #add sentinel
     hand_hists, win_hist = reduce_process_results(output_queue)
     win_perc, hand_perc = utils.calculate_equity(hand_hists, win_hist)
+    end_time = utils.timeit.default_timer()
+    print("time elapsed:", str(end_time - start_time))
     print(win_perc)
     print(hand_perc)
     
+#should be roughly 87% in favor of aces
+run_simulation_parallel([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [])
+

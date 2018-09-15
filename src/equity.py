@@ -1,6 +1,7 @@
 import constants
 import itertools
 import random
+import timeit
 
 
 def generate_deck(hole_cards, board):
@@ -120,22 +121,28 @@ def update_simulation_state(hole_cards, board, hand_hists, win_hist):
         win_hist[best_hand_indices[0]] += 1
 
 def calculate_equity(hand_hists, win_hist):
-    print(hand_hists, win_hist)
     num_its = sum(win_hist)
     win_perc = [val/num_its for val in win_hist]
     hand_perc = [[val/num_its for val in player_hist] for player_hist in hand_hists]
     return win_perc, hand_perc
         
 def run_simulation(hole_cards, board):
+    start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
     hand_hists = [[0]*len(constants.HANDS) for hand in hole_cards]
     win_hist = [0] * (len(hole_cards) + 1)
-    for board in sample_boards(10000, deck, len(board)):
+    # for board in sample_boards(10000, deck, len(board)):
+    for board in enumerate_boards(deck, len(board)):
         update_simulation_state(hole_cards, board, hand_hists, win_hist)
     win_perc, hand_perc = calculate_equity(hand_hists, win_hist)
+    end_time = timeit.default_timer()
+    print('time elapsed:', str(end_time - start_time))
     print(win_perc)
     print(hand_perc)
     
 #should be roughly 87% in favor of aces
+#monte-carlo time: .36
+#exhaustive enumeration: 40.75 seconds
+#parallelized exhaustive enumeration: 70.96 seconds (why is it slower)
 run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [])
 
