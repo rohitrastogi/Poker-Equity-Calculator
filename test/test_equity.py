@@ -1,7 +1,6 @@
 import pytest
 import equity as utils
 
-
 def test_get_kicker_high_card():
     rank_hist = {
         13: 1,

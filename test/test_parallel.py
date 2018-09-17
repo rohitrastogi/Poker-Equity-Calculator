@@ -1,8 +1,11 @@
 import pytest
-import parallel as util
+import time
+import multiprocessing as mp
+from itertools import islice
+from parallel import reduce_process_results, chunk_generator
 
 def test_reduce_process_results():
-    q = util.mp.Queue()
+    q = mp.Queue()
     process_1_results = (
     [
         [1, 2, 3, 4],
@@ -38,7 +41,9 @@ def test_reduce_process_results():
     q.put(process_2_results)
     q.put(process_3_results)
     q.put(process_4_results)
-    q.put(None)
+    
+    #sometimes puts are slower than execution of assert so test fails
+    time.sleep(.1)
 
     results = (
     [
@@ -48,4 +53,11 @@ def test_reduce_process_results():
     ],
     [8, 12, 16, 20])
 
-    assert(util.reduce_process_results(q) == results)
+    assert(reduce_process_results(q) == results)
+
+def test_chunk_generator():
+    def test_generator():
+        for i in range(5, 0, -1):
+            yield i
+    assert(list(islice(chunk_generator(test_generator(), 2), 3)) == [[5, 4], [3, 2], [1]])
+

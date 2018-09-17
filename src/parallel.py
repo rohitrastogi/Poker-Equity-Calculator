@@ -1,6 +1,7 @@
 import multiprocessing as mp  
-import equity as utils
+from equity import update_simulation_state, generate_deck, enumerate_boards, calculate_equity
 import constants
+import timeit
 
 #TODO: investigate performance of using pipes instead of queues
 
@@ -28,10 +29,10 @@ def process(input_queue, output_queue, hole_cards, chunks):
         if not boards:
             break
         if not chunks:
-            utils.update_simulation_state(hole_cards, boards, hand_hists, win_hist)
+            update_simulation_state(hole_cards, boards, hand_hists, win_hist)
         else:
             for board in boards:
-                utils.update_simulation_state(hole_cards, board, hand_hists, win_hist)
+                update_simulation_state(hole_cards, board, hand_hists, win_hist)
     output_queue.put((hand_hists, win_hist))
 
 def reduce_process_results(queue):
@@ -49,29 +50,30 @@ def reduce_process_results(queue):
         return hand_hists_sum, win_hist_sum
     return reduce(helper, queue_list)
 
+#chunks is either False of a number
 def run_simulation_parallel(hole_cards, board, chunks = False):
-    start_time = utils.timeit.default_timer()
-    deck = utils.generate_deck(hole_cards, board)
+    start_time = timeit.default_timer()
+    deck = generate_deck(hole_cards, board)
     input_queue = mp.Queue(maxsize = 100)
     output_queue = mp.Queue(maxsize = 4)
     pool = mp.Pool(4, initializer = process, initargs = (input_queue, output_queue, hole_cards, chunks))
     if not chunks:
-        for board in utils.enumerate_boards(deck, len(board)):
+        for board in enumerate_boards(deck, len(board)):
             input_queue.put(board)
     else:
-        generator = utils.enumerate_boards(deck, len(board))
-        for boards in chunk_generator(generator, 1000):
+        generator = enumerate_boards(deck, len(board))
+        for boards in chunk_generator(generator, chunks):
             input_queue.put(boards)
     for _ in range(4):
         input_queue.put(None)
     pool.close()
     pool.join()
     hand_hists, win_hist = reduce_process_results(output_queue)
-    win_perc, hand_perc = utils.calculate_equity(hand_hists, win_hist)
-    end_time = utils.timeit.default_timer()
+    win_perc, hand_perc = calculate_equity(hand_hists, win_hist)
+    end_time = timeit.default_timer()
     print("time elapsed:", str(end_time - start_time))
     print(win_perc)
     print(hand_perc)
     
 #should be roughly 87% in favor of aces
-run_simulation_parallel([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [], True)
+#run_simulation_parallel([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [], 1000)
