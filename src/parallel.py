@@ -7,11 +7,16 @@ import constants
 def process(input_queue, output_queue, hole_cards):
     hand_hists = [[0]*len(constants.HANDS) for hand in hole_cards]
     win_hist = [0] * (len(hole_cards) + 1)
+    i = 0
     while True:
+        i += 1
+        curr = utils.timeit.default_timer()
         board = input_queue.get()
+        print(utils.timeit.default_timer() - curr)
         if not board:
             break
         utils.update_simulation_state(hole_cards, board, hand_hists, win_hist)
+    print(i)
     output_queue.put((hand_hists, win_hist))
 
 def reduce_process_results(queue):
@@ -39,7 +44,7 @@ def run_simulation_parallel(hole_cards, board):
     pool = mp.Pool(4, initializer = process, initargs = (input_queue, output_queue, hole_cards))
     for board in utils.enumerate_boards(deck, len(board)):
         input_queue.put(board)
-    for _ in range(4):
+    for _ in range(1):
         input_queue.put(None)
     pool.close()
     pool.join()

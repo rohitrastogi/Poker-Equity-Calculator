@@ -144,5 +144,5 @@ def run_simulation(hole_cards, board):
 #monte-carlo time: .36
 #exhaustive enumeration: 40.75 seconds
 #parallelized exhaustive enumeration: 70.96 seconds (why is it slower)
-run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [])
+#run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [])
 
