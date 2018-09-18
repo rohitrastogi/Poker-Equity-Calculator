@@ -12,9 +12,13 @@ def enumerate_boards(deck, board_size):
     return itertools.combinations(deck, constants.MAX_BOARD_SIZE - board_size)
 
 #generate num_samples random boards (for Monte Carlo Simulation)
-def sample_boards(num_samples, deck, board_size):
+#TODO: scale num_samples to board_size somehow
+def sample_boards(deck, board_size, num_samples = 10000):
     for _ in range(num_samples):
         yield random.sample(deck, constants.MAX_BOARD_SIZE - board_size) 
+
+def combine_board(generated_board_cards, inputted_board_cards):
+    return generated_board_cards + tuple(inputted_board_cards)
 
 def populate_hists(hole_cards, board):
     rank_hist = {}
@@ -147,18 +151,18 @@ def print_results(wins, hands, time, verbose):
                 print(f'{hand}: {hands[i][j]}')
     print(constants.SEPARATOR)
         
-#num_its is either False (exhaustive enumeration) or num its for Monte Carlo simulation
-#TODO: handle board sizes 
-def run_simulation(hole_cards, board, num_its = 10000, verbose = False):
+def run_simulation(hole_cards = None, board = None, exact = False, verbose = False):    #
+    if not hole_cards and not board:
+        raise ValueError('Supply hole_cards and board lists.')
     start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
     hand_hists, win_hist = init_simulation_state(hole_cards)
-    if not num_its:
+    if not exact:
         boards = enumerate_boards(deck, len(board))
     else:
-        boards = sample_boards(num_its, deck, len(board))
-    for board in boards:
-        update_simulation_state(hole_cards, board, hand_hists, win_hist)
+        boards = sample_boards(deck, len(board))
+    for gen_board in boards:
+        update_simulation_state(hole_cards, combine_board(gen_board, board), hand_hists, win_hist)
     win_perc, hand_perc = calculate_equity(hand_hists, win_hist)
     end_time = timeit.default_timer()
     print_results(win_perc, hand_perc, end_time - start_time, verbose)

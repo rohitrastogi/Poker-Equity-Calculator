@@ -1,15 +1,16 @@
 import multiprocessing as mp  
-from equity import sample_boards, update_simulation_state, generate_deck, enumerate_boards, calculate_equity, print_results, init_simulation_state
 import constants
 import timeit
+import equity 
 
-def chunk_generator(generator, chunk_size = 1000):
+def chunk_generator(generator, f, args, chunk_size = 1000):
     while True:
         res = None
         temp = []
         for _ in range(chunk_size):
             try: 
-                temp.append(next(generator))
+                args[0] = next(generator)
+                temp.append(f(*args))
             except:
                 yield temp
                 raise StopIteration
@@ -18,16 +19,16 @@ def chunk_generator(generator, chunk_size = 1000):
         yield res 
 
 def process(input_queue, output_queue, hole_cards, chunks):
-    hand_hists, win_hist = init_simulation_state(hole_cards)
+    hand_hists, win_hist = equity.init_simulation_state(hole_cards)
     while True:
         boards = input_queue.get()
         if not boards:
             break
         if not chunks:
-            update_simulation_state(hole_cards, boards, hand_hists, win_hist)
+            equity.update_simulation_state(hole_cards, boards, hand_hists, win_hist)
         else:
             for board in boards:
-                update_simulation_state(hole_cards, board, hand_hists, win_hist)
+                equity.update_simulation_state(hole_cards, board, hand_hists, win_hist)
     output_queue.put((hand_hists, win_hist))
 
 def reduce_process_results(queue):
@@ -45,30 +46,32 @@ def reduce_process_results(queue):
         return hand_hists_sum, win_hist_sum
     return reduce(helper, queue_list)
 
-#chunks is either False or the number of chunks
-#num_its is either False (exhaustive enumeration) or num its for Monte Carlo simulation
-def run_simulation_parallel(hole_cards, board, num_its = 10000, chunks = False, verbose = False):
+def run_simulation_parallel(hole_cards = None, board = None, exact = False, chunks = True, verbose = False):
+    boards = None
+    if not hole_cards and not board:
+        raise ValueError('Supply hole_cards and board lists.')
     start_time = timeit.default_timer()
-    deck = generate_deck(hole_cards, board)
+    deck = equity.generate_deck(hole_cards, board)
     input_queue = mp.Queue(maxsize = 100)
     output_queue = mp.Queue(maxsize = constants.NUM_WORKERS)
     pool = mp.Pool(constants.NUM_WORKERS, initializer = process, initargs = (input_queue, output_queue, hole_cards, chunks))
-    if not num_its:
-        if not chunks:
-            for board in enumerate_boards(deck, len(board)):
-                input_queue.put(board)
-        else:
-            generator = enumerate_boards(deck, len(board))
-            for boards in chunk_generator(generator, chunks):
-                input_queue.put(boards)
+    if exact and chunks:
+        generator = equity.enumerate_boards(deck, len(board))
+        for boards in chunk_generator(generator, equity.combine_board, [None, board]):
+            input_queue.put(boards)
+    if exact and not chunks:
+        boards = equity.enumerate_boards(deck, len(board))
     else:
-        for board in sample_boards(num_its, deck, len(board)):
-            input_queue.put(board)
+        boards = equity.sample_boards(deck, len(boards))
+    if boards:
+        for gen_board in boards:
+            input_queue.put(equity.combine_board(gen_board, board))
     for _ in range(constants.NUM_WORKERS):
+        #poison pill
         input_queue.put(None)
     pool.close()
     pool.join()
     hand_hists, win_hist = reduce_process_results(output_queue)
-    win_perc, hand_perc = calculate_equity(hand_hists, win_hist)
+    win_perc, hand_perc = equity.calculate_equity(hand_hists, win_hist)
     end_time = timeit.default_timer()
-    print_results(win_perc, hand_perc, end_time - start_time, verbose)
+    equity.print_results(win_perc, hand_perc, end_time - start_time, verbose)

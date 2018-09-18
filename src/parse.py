@@ -44,17 +44,15 @@ def parse():
     parser = argparse.ArgumentParser(description='Calculate hand equity with supplied hole cards and optional board cards.')
     parser.add_argument('hole_cards', metavar = 'hc', nargs = '*', action = ValidateCards, help = 'A list of all \
     players\' hole cards. Every player must have two hole cards and you must supply cards for at least players. Ex. Ad Ah 7d 2s')
-    parser.add_argument('--b', '--board', metavar = 'bc', nargs = '*', action = ValidateCards, help = 'A list of all board cards. \
+    parser.add_argument('--board', '--b', metavar = 'bc', nargs = '*', action = ValidateCards, help = 'A list of all board cards. \
     A board may include at most 5 cards per Texas Hold\'em Rules.')
     parser.add_argument('--e', '--exact', action = 'store_true', help = 'Supply --e flag if you\'d like hand equity to be calculated exactly \
     using exhaustive enumeration. Note that exhasutive enumeration is substantially slower than estimating hand equity using Monte \
     Carlo Simulation (default behavior) and Monte Carlo simulation is usually accurate within 1%.')
-    parser.add_argument('--v', '--verbose', action = 'store_true', help = 'Supply --v flag if you\'d like detailed output on the probability of \
+    parser.add_argument('--verbose', '--v', action = 'store_true', help = 'Supply --v flag if you\'d like detailed output on the probability of \
     making all Texas Hold\'em hands.')
     parser.add_argument('--p', '--parallel', action = 'store_true', help = 'Supply --p flag if you\'d like the computation to be parallelized \
     over 4 workers. Note that there is only a speed benefit of parallelizing the computation if the --e flag is supplied, as Monte \
     Carlo simulation is very fast on the main thread.')
-    args = parser.parse_args()
-    return (args.hole_cards, args.b, args.e, args.v, args.p)
-
-print(parse())
+    #convert namespace object to dictionary
+    return vars(parser.parse_args())
