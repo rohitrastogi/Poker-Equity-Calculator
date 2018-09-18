@@ -107,6 +107,11 @@ def detect_flush(suit_hist):
             return sorted(suit_hist[suit], reverse = True)[:constants.SIZE_OF_HAND]
     return False
 
+def init_simulation_state(hole_cards):
+    hand_hists = [[0]*len(constants.HANDS) for hand in hole_cards]
+    win_hist = [0] * (len(hole_cards) + 1)
+    return hand_hists, win_hist
+
 def update_simulation_state(hole_cards, board, hand_hists, win_hist):
     evaluated_hands = []
     for i, hand in enumerate(hole_cards):
@@ -125,24 +130,35 @@ def calculate_equity(hand_hists, win_hist):
     win_perc = [val/num_its for val in win_hist]
     hand_perc = [[val/num_its for val in player_hist] for player_hist in hand_hists]
     return win_perc, hand_perc
+
+def print_results(wins, hands, time, verbose):
+    print(constants.SEPARATOR)
+    print(f'Time elapsed: {time} seconds \n')
+    for i in range(len(wins) - 1):
+        print(f'Player {i+1} Equity: {wins[i]}')
+    print(f'Chop: {wins[len(wins) - 1]}')
+    
+    if verbose:
+        for i in range(len(hands)):
+            print(f'\nPlayer {i + 1} Hand Probabilities:')
+            for j, hand in enumerate(constants.HANDS):
+                print(f'{hand}: {hands[i][j]}')
+    print(constants.SEPARATOR)
         
-def run_simulation(hole_cards, board):
+#num_its is either False (exhaustive enumeration) or num its for Monte Carlo simulation
+def run_simulation(hole_cards, board, num_its = 10000, verbose = False):
     start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
-    hand_hists = [[0]*len(constants.HANDS) for hand in hole_cards]
-    win_hist = [0] * (len(hole_cards) + 1)
-    # for board in sample_boards(10000, deck, len(board)):
-    for board in enumerate_boards(deck, len(board)):
+    hand_hists, win_hist = init_simulation_state(hole_cards)
+    if not num_its:
+        boards = enumerate_boards(deck, len(board))
+    else:
+        boards = sample_boards(num_its, deck, len(board))
+    for board in boards:
         update_simulation_state(hole_cards, board, hand_hists, win_hist)
     win_perc, hand_perc = calculate_equity(hand_hists, win_hist)
     end_time = timeit.default_timer()
-    print('time elapsed:', str(end_time - start_time))
-    print(win_perc)
-    print(hand_perc)
+    print_results(win_perc, hand_perc, end_time - start_time, verbose)
     
-#should be roughly 87% in favor of aces
-#monte-carlo time: .36
-#exhaustive enumeration: 40.75 seconds
-#parallelized exhaustive enumeration: 70.96 seconds (why is it slower)
-#run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [])
+run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [], verbose = True)
 
