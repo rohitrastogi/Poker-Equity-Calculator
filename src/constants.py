@@ -11,7 +11,7 @@ HANDS = (
     'Royal Flush'
 )
 
-SUITS = ('S', 'H', 'D', 'C')
+SUITS = ('s', 'h', 'd', 'c')
 
 RANK_TO_INT = {
     'A': 13,

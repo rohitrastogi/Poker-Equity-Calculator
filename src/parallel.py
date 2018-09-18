@@ -1,5 +1,5 @@
 import multiprocessing as mp  
-from equity import update_simulation_state, generate_deck, enumerate_boards, calculate_equity, print_results, init_simulation_state
+from equity import sample_boards, update_simulation_state, generate_deck, enumerate_boards, calculate_equity, print_results, init_simulation_state
 import constants
 import timeit
 
@@ -46,19 +46,24 @@ def reduce_process_results(queue):
     return reduce(helper, queue_list)
 
 #chunks is either False or the number of chunks
-def run_simulation_parallel(hole_cards, board, chunks = False, verbose = False):
+#num_its is either False (exhaustive enumeration) or num its for Monte Carlo simulation
+def run_simulation_parallel(hole_cards, board, num_its = 10000, chunks = False, verbose = False):
     start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
     input_queue = mp.Queue(maxsize = 100)
     output_queue = mp.Queue(maxsize = constants.NUM_WORKERS)
     pool = mp.Pool(constants.NUM_WORKERS, initializer = process, initargs = (input_queue, output_queue, hole_cards, chunks))
-    if not chunks:
-        for board in enumerate_boards(deck, len(board)):
-            input_queue.put(board)
+    if not num_its:
+        if not chunks:
+            for board in enumerate_boards(deck, len(board)):
+                input_queue.put(board)
+        else:
+            generator = enumerate_boards(deck, len(board))
+            for boards in chunk_generator(generator, chunks):
+                input_queue.put(boards)
     else:
-        generator = enumerate_boards(deck, len(board))
-        for boards in chunk_generator(generator, chunks):
-            input_queue.put(boards)
+        for board in sample_boards(num_its, deck, len(board)):
+            input_queue.put(board)
     for _ in range(constants.NUM_WORKERS):
         input_queue.put(None)
     pool.close()

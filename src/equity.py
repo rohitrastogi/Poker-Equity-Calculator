@@ -3,7 +3,6 @@ import itertools
 import random
 import timeit
 
-
 def generate_deck(hole_cards, board):
     flat_hole_cards = set([card for hand in hole_cards for card in hand] + board)
     return [(card, suit) for suit in list(constants.SUITS) for card in constants.INT_TO_RANK.keys() if (card, suit) not in flat_hole_cards]
@@ -32,6 +31,8 @@ def populate_hists(hole_cards, board):
             suit_hist[suit] = [rank]
     return rank_hist, suit_hist
 
+#returns tuple of hand rank and relevant kickers 
+#useful to return tuple with elements stored in decreasing ordered because built-in max() can be used to evaluate best hand
 def evaluate_hand(hand, board):
     rank_hist, suit_hist = populate_hists(hand, board)
     #Sort in decreasing order by rank frequency. Break ties using decreasing rank.
@@ -120,6 +121,7 @@ def update_simulation_state(hole_cards, board, hand_hists, win_hist):
         hand_hists[i][evaluated_hand[0]] += 1
     best_hand = max(evaluated_hands)
     best_hand_indices = [i for i, hand in enumerate(evaluated_hands) if hand == best_hand]
+    #handle chopped pots
     if len(best_hand_indices) > 1:
         win_hist[len(hole_cards)] += 1
     else:
@@ -146,6 +148,7 @@ def print_results(wins, hands, time, verbose):
     print(constants.SEPARATOR)
         
 #num_its is either False (exhaustive enumeration) or num its for Monte Carlo simulation
+#TODO: handle board sizes 
 def run_simulation(hole_cards, board, num_its = 10000, verbose = False):
     start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
