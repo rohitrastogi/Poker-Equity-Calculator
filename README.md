@@ -5,6 +5,8 @@ Shove is a command line utility to calculate poker hand equity written in Python
 Shove can calculate hand equities for up to 10 players and works with or without a supplied board.
 
 Run shove with `python3 src/shove.py -h`
+
+To run tests, first run `pip3 install pytest`. Then, run `python3 -m pytest`.
 ```
 Rohits-MBP-2:shove rohitrastogi$ python3 src/shove.py -h
 usage: shove.py [-h] [--board [bc [bc ...]]] [--exact] [--verbose]
