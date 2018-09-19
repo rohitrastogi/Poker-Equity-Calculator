@@ -25,14 +25,14 @@ class ValidateCards(argparse.Action):
             self.cards.add(card)
             validate_card(card)
         #validate board cards
-        if self.dest == 'b': 
-            if len(values) > constants.MAX_BOARD_SIZE:
-                raise ValueError("Board must have less than or equal to 5 cards.")
+        if self.dest == 'board': 
+            if len(values) > constants.MAX_BOARD_SIZE - 1:
+                raise ValueError("Board must have less than or equal to 4 cards.")
             setattr(namespace, self.dest, cards_to_tups(values))
         #validate hole cards
         else:
             if len(values) %2 != 0:
-                raise ValueError("Hole card input must two cards per player.")
+                raise ValueError("Hole card input must include two cards per player.")
             if len(values) < 4:
                     raise ValueError("Hole card input must include hole cards for at least 2 players.")
             if len(values) > 20:
@@ -44,15 +44,15 @@ def parse():
     parser = argparse.ArgumentParser(description='Calculate hand equity with supplied hole cards and optional board cards.')
     parser.add_argument('hole_cards', metavar = 'hc', nargs = '*', action = ValidateCards, help = 'A list of all \
     players\' hole cards. Every player must have two hole cards and you must supply cards for at least players. Ex. Ad Ah 7d 2s')
-    parser.add_argument('--board', '--b', metavar = 'bc', nargs = '*', action = ValidateCards, help = 'A list of all board cards. \
-    A board may include at most 5 cards per Texas Hold\'em Rules.')
-    parser.add_argument('--e', '--exact', action = 'store_true', help = 'Supply --e flag if you\'d like hand equity to be calculated exactly \
+    parser.add_argument('--board', '--b', metavar = 'bc', nargs = '*', default = [], action = ValidateCards, help = 'A list of all board cards. \
+    A supplied board may include at most 4 cards.')
+    parser.add_argument('--exact', '--e', action = 'store_true', help = 'Calculate hand equity exactly \
     using exhaustive enumeration. Note that exhasutive enumeration is substantially slower than estimating hand equity using Monte \
-    Carlo Simulation (default behavior) and Monte Carlo simulation is usually accurate within 1%.')
-    parser.add_argument('--verbose', '--v', action = 'store_true', help = 'Supply --v flag if you\'d like detailed output on the probability of \
-    making all Texas Hold\'em hands.')
-    parser.add_argument('--p', '--parallel', action = 'store_true', help = 'Supply --p flag if you\'d like the computation to be parallelized \
-    over 4 workers. Note that there is only a speed benefit of parallelizing the computation if the --e flag is supplied, as Monte \
+    Carlo Simulation (default) and Monte Carlo simulation is usually accurate within 1%%.')
+    parser.add_argument('--verbose', '--v', action = 'store_true', help = 'Receive detailed output on the probability of \
+    making all possible Texas Hold\'em hands.')
+    parser.add_argument('--parallel', '--p', action = 'store_true', help = 'Parallelize hand equity computation  \
+    over 4 workers. Note that there is only a speed benefit of parallelizing the computation if the --exact/e flag is supplied, as Monte \
     Carlo simulation is very fast on the main thread.')
     #convert namespace object to dictionary
     return vars(parser.parse_args())

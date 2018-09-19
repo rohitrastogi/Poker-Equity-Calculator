@@ -59,5 +59,8 @@ def test_chunk_generator():
     def test_generator():
         for i in range(5, 0, -1):
             yield i
-    assert(list(islice(chunk_generator(test_generator(), 2), 3)) == [[5, 4], [3, 2], [1]])
+    def f(x, y):
+        return x + y
+
+    assert(list(islice(chunk_generator(test_generator(), f, [1], 2), 3)) == [[6, 5], [4, 3], [2]])
 

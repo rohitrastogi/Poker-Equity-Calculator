@@ -18,7 +18,7 @@ def sample_boards(deck, board_size, num_samples = 10000):
         yield random.sample(deck, constants.MAX_BOARD_SIZE - board_size) 
 
 def combine_board(generated_board_cards, inputted_board_cards):
-    return generated_board_cards + tuple(inputted_board_cards)
+    return list(generated_board_cards) + list(inputted_board_cards)
 
 def populate_hists(hole_cards, board):
     rank_hist = {}
@@ -151,13 +151,13 @@ def print_results(wins, hands, time, verbose):
                 print(f'{hand}: {hands[i][j]}')
     print(constants.SEPARATOR)
         
-def run_simulation(hole_cards = None, board = None, exact = False, verbose = False):    #
+def run_simulation(hole_cards = None, board = None, exact = False, verbose = False):
     if not hole_cards and not board:
         raise ValueError('Supply hole_cards and board lists.')
     start_time = timeit.default_timer()
     deck = generate_deck(hole_cards, board)
     hand_hists, win_hist = init_simulation_state(hole_cards)
-    if not exact:
+    if exact:
         boards = enumerate_boards(deck, len(board))
     else:
         boards = sample_boards(deck, len(board))
@@ -167,5 +167,4 @@ def run_simulation(hole_cards = None, board = None, exact = False, verbose = Fal
     end_time = timeit.default_timer()
     print_results(win_perc, hand_perc, end_time - start_time, verbose)
     
-run_simulation([[(13, 'D'), (13, 'H')],[(2, 'S'), (7, 'H')]], [], verbose = True)
 

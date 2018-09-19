@@ -9,8 +9,8 @@ def chunk_generator(generator, f, args, chunk_size = 1000):
         temp = []
         for _ in range(chunk_size):
             try: 
-                args[0] = next(generator)
-                temp.append(f(*args))
+                curr = [next(generator)]
+                temp.append(f(*(curr + args)))
             except:
                 yield temp
                 raise StopIteration
@@ -57,14 +57,19 @@ def run_simulation_parallel(hole_cards = None, board = None, exact = False, chun
     pool = mp.Pool(constants.NUM_WORKERS, initializer = process, initargs = (input_queue, output_queue, hole_cards, chunks))
     if exact and chunks:
         generator = equity.enumerate_boards(deck, len(board))
-        for boards in chunk_generator(generator, equity.combine_board, [None, board]):
-            input_queue.put(boards)
-    if exact and not chunks:
+        for boards_chunk in chunk_generator(generator, equity.combine_board, [board]):
+            input_queue.put(boards_chunk)
+    elif exact and not chunks:
         boards = equity.enumerate_boards(deck, len(board))
+    elif not exact and chunks:
+        generator = equity.sample_boards(deck, len(board))
+        for boards_chunk in chunk_generator(generator, equity.combine_board, [board]):
+            input_queue.put(boards_chunk)
     else:
-        boards = equity.sample_boards(deck, len(boards))
+        boards = equity.sample_boards(deck, len(board))
     if boards:
         for gen_board in boards:
+            print(equity.combine_board(gen_board, board))
             input_queue.put(equity.combine_board(gen_board, board))
     for _ in range(constants.NUM_WORKERS):
         #poison pill
